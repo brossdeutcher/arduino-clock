@@ -66,8 +66,9 @@ void loop() {
   rotaryEncoderHandler();
   
   // TODO: add alarm functionality
-  // alarm();
-
+    if (now.hour() == 8 && now.minute() == 0) {
+    alarm();
+  }
 }
 
 void rotaryEncoderHandler() {
