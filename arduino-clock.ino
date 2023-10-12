@@ -1,9 +1,12 @@
 #include <RTClib.h>
 #include <TM1637Display.h>
-
+#include "cantina.h"
 
 // Red LED
 #define redLED 3
+
+// buzzer
+#define buzzer 4
 
 // Rotary Encoder
 #define rotarySW 8
@@ -16,9 +19,6 @@ String rotaryCurrentDir = "";
 unsigned long rotaryLastButtonPress = 0;
 
 // Real-Time Clock DS1307
-// #define rtcSDA SDA
-// #define rtcSCL SCL
-// #define rtcSQW 10
 RTC_DS1307 rtc;
 DateTime now;
 
@@ -56,7 +56,7 @@ void setup() {
   
   // RTC
   rtc.begin();
-  rtc.adjust(DateTime(2023, 9, 7, 20, 58, 5)); // this is where you adjust the start time
+  rtc.adjust(DateTime(2023, 9, 7, 21, 6, 5)); // this is where you adjust the start time
 }
 
 void loop() {
@@ -66,7 +66,8 @@ void loop() {
   rotaryEncoderHandler();
   
   // TODO: add alarm functionality
-    if (now.hour() == 8 && now.minute() == 0) {
+  // alarm();
+  if (now.hour() == 8 && now.minute() == 0 && now.second() < 10) {
     alarm();
   }
 }
@@ -80,11 +81,15 @@ void rotaryEncoderHandler() {
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
-      // min--;
-      Serial.println("min ++");
-    } else {
       // min++;
+      // int min = now.minute()+1;
+      // rtc.adjust(DateTime(now.year(), now.day(), now.hour(), min, now.second()));
       Serial.println("min --");
+    } else {
+      // min--;
+      // int min = now.minute()-1;
+      // rtc.adjust(DateTime(now.year(), now.month(), now.day(), now.hour(), min, now.second()));
+      Serial.println("min ++");
     }
   }
   lastStateRotaryCLK = currentStateRotaryCLK;
@@ -102,6 +107,6 @@ void alarm() {
   digitalWrite(redLED, LOW);
   delay(750);
 
-  // TODO: add sound
-
+  // from cantina.h
+  playCantina();
 }
