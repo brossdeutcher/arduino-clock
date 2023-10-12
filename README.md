@@ -1,5 +1,5 @@
 # Arduino Clock
-## A real-time created with an Arduino
+## A real-time on an Arduino
 
 ## Components
 - Arduino Uno
@@ -17,3 +17,6 @@ This is my first project usable in the real world. I initially created this with
 As of this writing, my clock has been running for a week and matches my laptop's clock to the second. I intend to expand this project into an alarm clock with a flashing LED and audio. I also started on the rotary encoder code in this repo with the intent of being able to adjust the time and set the alarm. Maybe someday, I will learn about 3D printing and give this project a creative case.
 
 I intend on keeping this clock as my primary time keeper in my bedroom and am excited to add more functionality. Thank you for reading and I hope you enjoy this project as much as I did building it!
+
+## Credit
+https://github.com/robsoncouto/arduino-songs/blob/master/cantinaband/cantinaband.ino
