@@ -102,7 +102,7 @@
 int tempo = 140;
 
 // change this to whichever pin you want to use
-int buzzer = 4;
+// int buzzerPin = 4;
 
 // notes of the moledy followed by the duration.
 // a 4 means a quarter note, 8 an eighteenth , 16 sixteenth, so on
@@ -144,10 +144,17 @@ int wholenote = (60000 * 2) / tempo;
 
 int divider = 0, noteDuration = 0;
 
-void playCantina() {
+void playCantina(int LEDPin, int buzzerPin) {
   // iterate over the notes of the melody. 
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) {
+    // blinks every other note
+    digitalWrite(LEDPin, HIGH);
+    if (thisNote % 4 < 2) {
+      digitalWrite(LEDPin, HIGH);
+    } else {
+      digitalWrite(LEDPin, LOW);
+    }
 
     // calculates the duration of each note
     divider = melody[thisNote + 1];
@@ -161,12 +168,12 @@ void playCantina() {
     }
 
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    tone(buzzer, melody[thisNote], noteDuration*0.9);
+    tone(buzzerPin, melody[thisNote], noteDuration*0.9);
 
     // Wait for the specief duration before playing the next note.
     delay(noteDuration);
     
     // stop the waveform generation before the next note.
-    noTone(buzzer);
+    noTone(buzzerPin);
   }
 }

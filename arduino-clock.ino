@@ -49,7 +49,7 @@ void setup() {
   lastStateRotaryCLK = digitalRead(rotaryCLK);
   // RTC
   rtc.begin();
-  rtc.adjust(DateTime(2023, 9, 7, 21, 6, 5)); // this is where you adjust the start time
+  rtc.adjust(DateTime(2023, 9, 7, 7, 59, 58)); // boot time
 }
 
 void loop() {
@@ -59,13 +59,13 @@ void loop() {
   rotaryEncoderHandler();
 
   if (now.hour() == 8 && now.minute() == 0 && now.second() < 10) {
-    alarm();
+    playCantina(redLED, buzzer);
   }
 }
 
 void rotaryEncoderHandler() {
   
-  // TODO: fix rotary encoder (sometimes mistakes which direction it is going)
+  // TODO: fix rotary encoder (sometimes mistakes which direction it is going, might be broken encoder)
   // TODO: set alarm with rotary encoder
   
   currentStateRotaryCLK = digitalRead(rotaryCLK);
@@ -88,17 +88,4 @@ void rotaryEncoderHandler() {
 void sevSegHandler() {
   sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
   sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
-}
-
-void alarm() {
-
-  // TODO: flash light & play song at same time
-
-  digitalWrite(redLED, HIGH);
-  delay(500);
-  digitalWrite(redLED, LOW);
-  delay(750);
-
-  // from cantina.h
-  playCantina();
 }
