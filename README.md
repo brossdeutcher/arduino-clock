@@ -1,7 +1,7 @@
 # Arduino Clock
 ## A real-time on an Arduino
 
-## Information
+## Usage
 - Adjust time using the rotary encoder (clockwise adds minute, counter-clockwise subtracts minute)
 - Alarm set to 08:00
 - Alarm flashes LED & plays Mos Eisley Cantina song form Star Wars
