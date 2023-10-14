@@ -75,28 +75,26 @@ void loop() {
 void rotaryEncoderHandler() {
   
   // TODO: fix rotary encoder (sometimes mistakes which direction it is going)
-  // TODO: add/subtract minutes with rotary encoder
   // TODO: set alarm with rotary encoder
   
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
-      // min++;
-      // int min = now.minute()+1;
-      // rtc.adjust(DateTime(now.year(), now.day(), now.hour(), min, now.second()));
-      Serial.println("min --");
+      rtc.adjust(rtc.now() - TimeSpan(0,0,1,0));
+      int hrMin = (now.hour() * 100) + now.minute();
+      Serial.print(hrMin);
+      Serial.println(" min --");
     } else {
-      // min--;
-      // int min = now.minute()-1;
-      // rtc.adjust(DateTime(now.year(), now.month(), now.day(), now.hour(), min, now.second()));
-      Serial.println("min ++");
+      rtc.adjust(rtc.now() + TimeSpan(0,0,1,0));
+      int hrMin = (now.hour() * 100) + now.minute();
+      Serial.print(hrMin);
+      Serial.println(" min ++");
     }
   }
   lastStateRotaryCLK = currentStateRotaryCLK;
 }
 
 void sevSegHandler() {
-  // int hrMin = (hrs * 100) + min;
   int hrMin = (now.hour() * 100) + now.minute();
   sevSegDisplay.showNumberDec(hrMin);
 }
