@@ -13,8 +13,8 @@
 int rotaryCounter = 0;
 int currentStateRotaryCLK;
 int lastStateRotaryCLK;
-String rotaryCurrentDir = "";
-unsigned long rotaryLastButtonPress = 0;
+int currentStateRotarySW;
+int lastStateRotarySW;
 // Real-Time Clock DS1307
 RTC_DS1307 rtc;
 DateTime now;
@@ -30,6 +30,8 @@ const uint8_t alrm[] = {
   SEG_A | SEG_E | SEG_F,
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G
 };
+// misc
+bool isSetAlarm = false;
 
 
 void setup() {
@@ -42,14 +44,16 @@ void setup() {
   sevSegDisplay.setSegments(alrm);
   delay(1000);
   // Rotary Encoder
+  attachInterrupt(digitalPinToInterrupt(rotarySW), setAlarm, FALLING);
   pinMode(rotarySW, INPUT_PULLUP);
   pinMode(rotaryDT, INPUT);
   pinMode(rotaryCLK, INPUT);
   Serial.begin(9600);
   lastStateRotaryCLK = digitalRead(rotaryCLK);
+  lastStateRotarySW = digitalRead(rotarySW);
   // RTC
   rtc.begin();
-  rtc.adjust(DateTime(2023, 9, 7, 7, 59, 58)); // boot time
+  rtc.adjust(DateTime(2023, 9, 7, 6, 59, 58)); // boot time
 }
 
 void loop() {
@@ -65,9 +69,16 @@ void loop() {
 
 void rotaryEncoderHandler() {
   
-  // TODO: fix rotary encoder (sometimes mistakes which direction it is going, might be broken encoder)
+  // TODO: fix rotary encoder (sometimes mistakes which direction it is going, might be broken hardware)
   // TODO: set alarm with rotary encoder
   
+  currentStateRotarySW = digitalRead(rotarySW);
+  if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
+    isSetAlarm = !isSetAlarm;
+    Serial.println(isSetAlarm);
+  }
+  lastStateRotarySW = currentStateRotarySW;
+
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
@@ -83,6 +94,10 @@ void rotaryEncoderHandler() {
     }
   }
   lastStateRotaryCLK = currentStateRotaryCLK;
+}
+
+void setAlarm() {
+  Serial.println("button pressed");
 }
 
 void sevSegHandler() {
