@@ -32,6 +32,7 @@ const uint8_t alrm[] = {
 };
 // misc
 bool isSetAlarm = false;
+DateTime alarmTime = DateTime(62*60);  // boot alarm time
 
 
 void setup() {
@@ -44,8 +45,8 @@ void setup() {
   sevSegDisplay.setSegments(alrm);
   delay(1000);
   // Rotary Encoder
-  attachInterrupt(digitalPinToInterrupt(rotarySW), setAlarm, FALLING);
   pinMode(rotarySW, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(rotarySW), setAlarm, FALLING);
   pinMode(rotaryDT, INPUT);
   pinMode(rotaryCLK, INPUT);
   Serial.begin(9600);
@@ -53,7 +54,7 @@ void setup() {
   lastStateRotarySW = digitalRead(rotarySW);
   // RTC
   rtc.begin();
-  rtc.adjust(DateTime(2023, 9, 7, 6, 59, 58)); // boot time
+  rtc.adjust(DateTime(2023, 9, 7, 17, 0, 58)); // boot time
 }
 
 void loop() {
@@ -62,19 +63,16 @@ void loop() {
   sevSegHandler();
   rotaryEncoderHandler();
 
-  if (now.hour() == 8 && now.minute() == 0 && now.second() < 10) {
+  if (now.hour() == alarmTime.hour() && now.minute() == alarmTime.minute() && now.second() < 10) {
     playCantina(redLED, buzzer);
   }
 }
 
 void rotaryEncoderHandler() {
-  
-  // TODO: fix rotary encoder (sometimes mistakes which direction it is going, might be broken hardware)
-  // TODO: set alarm with rotary encoder
-  
   currentStateRotarySW = digitalRead(rotarySW);
   if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
     isSetAlarm = !isSetAlarm;
+    Serial.print('set alarm mode?: ');
     Serial.println(isSetAlarm);
   }
   lastStateRotarySW = currentStateRotarySW;
@@ -82,15 +80,21 @@ void rotaryEncoderHandler() {
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
-      rtc.adjust(rtc.now() - TimeSpan(0,0,1,0));
-      int hrMin = (now.hour() * 100) + now.minute();
-      Serial.print(hrMin);
-      Serial.println(" min --");
+      if (isSetAlarm) {
+        alarmTime = alarmTime - TimeSpan(0,0,1,0);
+        Serial.println("alarm --");
+      } else {
+        rtc.adjust(rtc.now() - TimeSpan(0,0,1,0));
+        Serial.println("clock --");
+      }
     } else {
-      rtc.adjust(rtc.now() + TimeSpan(0,0,1,0));
-      int hrMin = (now.hour() * 100) + now.minute();
-      Serial.print(hrMin);
-      Serial.println(" min ++");
+      if (isSetAlarm) {
+        alarmTime = alarmTime + TimeSpan(0,0,1,0);
+        Serial.println("alarm ++");
+      } else {
+        rtc.adjust(rtc.now() + TimeSpan(0,0,1,0));
+        Serial.println("clock ++");
+      }
     }
   }
   lastStateRotaryCLK = currentStateRotaryCLK;
@@ -101,6 +105,11 @@ void setAlarm() {
 }
 
 void sevSegHandler() {
-  sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
-  sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
+  if (!isSetAlarm) {
+    sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
+    sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
+  } else {
+    sevSegDisplay.showNumberDecEx(alarmTime.minute(), 0, true, 2, 2);
+    sevSegDisplay.showNumberDecEx(alarmTime.hour(), 0, true, 2, 0);
+  }
 }
