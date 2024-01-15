@@ -36,7 +36,8 @@ const uint8_t alrm[] = {
 };
 
 // misc
-int curMode = 0;
+int curModeInt = 0;
+char curModeStr = "curTime";
 int displayMode[] = {"curTime", "setHr", "setMin", "setAlrmHr", "setAlrmMin"};
 DateTime alarmTime = DateTime(62*60);  // boot alarm time
 
@@ -71,6 +72,7 @@ void setup() {
 void loop() {
 
   now = rtc.now();
+  curModeStr = displayMode[curModeInt];
 
   sevSegHandler();
   rotaryEncoderHandler();
@@ -83,20 +85,21 @@ void loop() {
 void rotaryEncoderHandler() {
   currentStateRotarySW = digitalRead(rotarySW);
   if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
-    curMode = (curMode + 1) % 5;
+    curModeInt = (curModeInt + 1) % 5;
+    sevSegDisplay.clear();
     Serial.print("rtc time: ");
     Serial.print(rtc.now().hour());
     Serial.print(":");
     Serial.println(rtc.now().minute());
-    Serial.print("set alarm mode?: ");
-    Serial.println(curMode);
+    Serial.print("current mode?: ");
+    Serial.println(curModeInt);
   }
   lastStateRotarySW = currentStateRotarySW;
 
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
-      if (curMode == 4) {
+      if (curModeInt == 4) {
         alarmTime = alarmTime - TimeSpan(0,0,1,0);
         Serial.println("alarm --");
       } else {
@@ -104,7 +107,7 @@ void rotaryEncoderHandler() {
         Serial.println("clock --");
       }
     } else {
-      if (curMode == 0) {
+      if (curModeInt == 0) {
         alarmTime = alarmTime + TimeSpan(0,0,1,0);
         Serial.println("alarm ++");
       } else {
@@ -121,20 +124,17 @@ void setAlarm() {
 }
 
 void sevSegHandler() {
-  if (displayMode[curMode] == "curTime") {
+  if (curModeInt == 0) {
     sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
     sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
-  } else {
-    sevSegDisplay.showNumberDec(curMode);
+  } else if (curModeInt == 1) {
+    sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
+  } else if (curModeInt == 2) {
+    // TODO: get minute curTime display to show colon :
+    sevSegDisplay.showNumberDecEx(now.minute(), 0b01000000, true, 2, 2);
+  } else if (curModeInt == 3) {
+    sevSegDisplay.showNumberDecEx(alarmTime.hour(), 0, true, 2, 0);
+  } else if (curModeInt == 4) {
+    sevSegDisplay.showNumberDecEx(alarmTime.minute(), 0, true, 2, 2);
   }
-  // } else if (displayMode[curMode] == "setHr") {
-  //   sevSegDisplay.showNumberDecEx(alarmTime.minute(), 0, true, 2, 2);
-  //   sevSegDisplay.showNumberDecEx(alarmTime.hour(), 0, true, 2, 0);
-  // } else if (displayMode[curMode] == "setMin") {
-  // } else if (displayMode[curMode] == "setAlrmHr") {
-    
-  // }
-  // } else if (displayMode[curMode] == "setAlrmMin") {
-    
-  // }
 }
