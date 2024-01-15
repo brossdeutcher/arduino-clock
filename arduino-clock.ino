@@ -3,9 +3,11 @@
 #include "cantina.h"
 
 // Red LED
-#define redLED 3
+#define led 3
+
 // buzzer
 #define buzzer 4
+
 // Rotary Encoder
 #define rotarySW 8
 #define rotaryDT 9
@@ -15,9 +17,11 @@ int currentStateRotaryCLK;
 int lastStateRotaryCLK;
 int currentStateRotarySW;
 int lastStateRotarySW;
+
 // Real-Time Clock DS1307
 RTC_DS1307 rtc;
 DateTime now;
+
 // Seven-Segment Display
 #define tm1637DIO 5
 #define tm1637CLK 6
@@ -30,20 +34,25 @@ const uint8_t alrm[] = {
   SEG_A | SEG_E | SEG_F,
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G
 };
+
 // misc
-bool isSetAlarm = false;
+int curMode = 0;
+int displayMode[] = {"curTime", "setHr", "setMin", "setAlrmHr", "setAlrmMin"};
 DateTime alarmTime = DateTime(62*60);  // boot alarm time
 
 
 void setup() {
+
   // Red LED
-  pinMode(redLED, OUTPUT);
+  pinMode(led, OUTPUT);
+  
   // Seven Segment Display
   sevSegDisplay.clear();
-  sevSegDisplay.setBrightness(7);
+  sevSegDisplay.setBrightness(5);
   sevSegDisplay.clear();
   sevSegDisplay.setSegments(alrm);
   delay(1000);
+  
   // Rotary Encoder
   pinMode(rotarySW, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(rotarySW), setAlarm, FALLING);
@@ -52,35 +61,42 @@ void setup() {
   Serial.begin(9600);
   lastStateRotaryCLK = digitalRead(rotaryCLK);
   lastStateRotarySW = digitalRead(rotarySW);
+  
   // RTC
   rtc.begin();
-  rtc.adjust(DateTime(2023, 9, 7, 17, 0, 58)); // boot time
+  rtc.adjust(DateTime(2023, 9, 7, 4, 20, 58)); // boot time
+
 }
 
 void loop() {
+
   now = rtc.now();
 
   sevSegHandler();
   rotaryEncoderHandler();
 
   if (now.hour() == alarmTime.hour() && now.minute() == alarmTime.minute() && now.second() < 10) {
-    playCantina(redLED, buzzer);
+    playCantina(led, buzzer);
   }
 }
 
 void rotaryEncoderHandler() {
   currentStateRotarySW = digitalRead(rotarySW);
   if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
-    isSetAlarm = !isSetAlarm;
-    Serial.print('set alarm mode?: ');
-    Serial.println(isSetAlarm);
+    curMode = (curMode + 1) % 5;
+    Serial.print("rtc time: ");
+    Serial.print(rtc.now().hour());
+    Serial.print(":");
+    Serial.println(rtc.now().minute());
+    Serial.print("set alarm mode?: ");
+    Serial.println(curMode);
   }
   lastStateRotarySW = currentStateRotarySW;
 
   currentStateRotaryCLK = digitalRead(rotaryCLK);
   if (currentStateRotaryCLK != lastStateRotaryCLK && currentStateRotaryCLK == 1) {
     if (digitalRead(rotaryDT) != currentStateRotaryCLK) {
-      if (isSetAlarm) {
+      if (curMode == 4) {
         alarmTime = alarmTime - TimeSpan(0,0,1,0);
         Serial.println("alarm --");
       } else {
@@ -88,7 +104,7 @@ void rotaryEncoderHandler() {
         Serial.println("clock --");
       }
     } else {
-      if (isSetAlarm) {
+      if (curMode == 0) {
         alarmTime = alarmTime + TimeSpan(0,0,1,0);
         Serial.println("alarm ++");
       } else {
@@ -105,11 +121,20 @@ void setAlarm() {
 }
 
 void sevSegHandler() {
-  if (!isSetAlarm) {
+  if (displayMode[curMode] == "curTime") {
     sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
     sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
   } else {
-    sevSegDisplay.showNumberDecEx(alarmTime.minute(), 0, true, 2, 2);
-    sevSegDisplay.showNumberDecEx(alarmTime.hour(), 0, true, 2, 0);
+    sevSegDisplay.showNumberDec(curMode);
   }
+  // } else if (displayMode[curMode] == "setHr") {
+  //   sevSegDisplay.showNumberDecEx(alarmTime.minute(), 0, true, 2, 2);
+  //   sevSegDisplay.showNumberDecEx(alarmTime.hour(), 0, true, 2, 0);
+  // } else if (displayMode[curMode] == "setMin") {
+  // } else if (displayMode[curMode] == "setAlrmHr") {
+    
+  // }
+  // } else if (displayMode[curMode] == "setAlrmMin") {
+    
+  // }
 }
