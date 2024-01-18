@@ -3,15 +3,15 @@
 #include "cantina.h"
 
 // Red LED
-#define led 3
+#define led 8
 
 // buzzer
-#define buzzer 4
+#define buzzer 9
 
 // Rotary Encoder
-#define rotarySW 8
-#define rotaryDT 9
-#define rotaryCLK 10
+#define rotarySW 2
+#define rotaryDT 3
+#define rotaryCLK 4
 int rotaryCounter = 0;
 int currentStateRotaryCLK;
 int lastStateRotaryCLK;
@@ -46,17 +46,20 @@ void setup() {
 
   // Red LED
   pinMode(led, OUTPUT);
+  digitalWrite(led, HIGH);
+  delay(100);
+  digitalWrite(led, LOW);
   
   // Seven Segment Display
   sevSegDisplay.clear();
   sevSegDisplay.setBrightness(5);
   sevSegDisplay.clear();
   sevSegDisplay.setSegments(alrm);
-  delay(1000);
+  delay(500);
   
   // Rotary Encoder
   pinMode(rotarySW, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(rotarySW), setAlarm, FALLING);
+  attachInterrupt(digitalPinToInterrupt(rotarySW), setTime, FALLING);
   pinMode(rotaryDT, INPUT);
   pinMode(rotaryCLK, INPUT);
   Serial.begin(9600);
@@ -84,16 +87,16 @@ void loop() {
 
 void rotaryEncoderHandler() {
   currentStateRotarySW = digitalRead(rotarySW);
-  if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
-    curModeInt = (curModeInt + 1) % 5;
-    sevSegDisplay.clear();
-    Serial.print("rtc time: ");
-    Serial.print(rtc.now().hour());
-    Serial.print(":");
-    Serial.println(rtc.now().minute());
-    Serial.print("current mode?: ");
-    Serial.println(curModeInt);
-  }
+  // if (currentStateRotarySW == 1 && lastStateRotarySW == 0) {
+  //   curModeInt = (curModeInt + 1) % 5;
+  //   sevSegDisplay.clear();
+  //   Serial.print("rtc time: ");
+  //   Serial.print(rtc.now().hour());
+  //   Serial.print(":");
+  //   Serial.println(rtc.now().minute());
+  //   Serial.print("current mode?: ");
+  //   Serial.println(curModeInt);
+  // }
   lastStateRotarySW = currentStateRotarySW;
 
   currentStateRotaryCLK = digitalRead(rotaryCLK);
@@ -119,12 +122,17 @@ void rotaryEncoderHandler() {
   lastStateRotaryCLK = currentStateRotaryCLK;
 }
 
-void setAlarm() {
-  Serial.println("button pressed");
+void setTime() {
+  curModeInt = (curModeInt + 1) % 5;
+
+  digitalWrite(led, HIGH);
+  delay(500);
+  digitalWrite(led, LOW);
 }
 
 void sevSegHandler() {
   if (curModeInt == 0) {
+  // if (curModeStr == "curTime") {
     sevSegDisplay.showNumberDecEx(now.minute(), 0, true, 2, 2);
     sevSegDisplay.showNumberDecEx(now.hour(), 0b01000000, true, 2, 0);
   } else if (curModeInt == 1) {
